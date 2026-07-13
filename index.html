@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meritus Capital — Configure seu acesso</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f2f8;
+    --muted: #7a82a0;
+    --accent: #4f8ef7;
+    --accent-glow: rgba(79,142,247,0.18);
+    --green: #31c48d;
+    --green-glow: rgba(49,196,141,0.15);
+    --warn: #f5a623;
+    --radius: 16px;
+    --font-display: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  .header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 18px; color: #fff;
+  }
+  .header-text { font-size: 15px; font-weight: 600; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--muted); }
+
+  /* PROGRESS */
+  .progress-wrap {
+    width: 100%; max-width: 480px;
+    padding: 20px 24px 0;
+  }
+  .progress-steps {
+    display: flex; gap: 6px; align-items: center; margin-bottom: 6px;
+  }
+  .prog-step {
+    flex: 1; height: 4px; border-radius: 2px;
+    background: var(--border);
+    transition: background 0.4s;
+  }
+  .prog-step.done { background: var(--green); }
+  .prog-step.active { background: var(--accent); }
+  .prog-label { font-size: 12px; color: var(--muted); text-align: right; }
+
+  /* MAIN CONTENT */
+  .content { width: 100%; max-width: 480px; padding: 24px 20px 0; }
+
+  /* SCREENS */
+  .screen { display: none; animation: fadeUp 0.35s ease both; }
+  .screen.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* WELCOME */
+  .welcome-emoji { font-size: 48px; margin-bottom: 16px; display: block; }
+  .welcome-title {
+    font-family: var(--font-display); font-size: 26px; font-weight: 800;
+    line-height: 1.2; margin-bottom: 10px; color: var(--text);
+  }
+  .welcome-title span { color: var(--accent); }
+  .welcome-desc { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+
+  .steps-preview {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 4px; margin-bottom: 28px;
+  }
+  .preview-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 12px;
+  }
+  .preview-item:hover { background: var(--surface2); }
+  .preview-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+    flex-shrink: 0;
+  }
+  .preview-icon.blue { background: var(--accent-glow); }
+  .preview-icon.green { background: var(--green-glow); }
+  .preview-label { font-size: 14px; font-weight: 500; }
+  .preview-time { font-size: 12px; color: var(--muted); }
+
+  /* CARD */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+  }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+
+  /* STEP ITEM */
+  .step-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .step-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .step-item:first-child { padding-top: 0; }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    flex-shrink: 0; transition: all 0.3s; margin-top: 1px;
+  }
+  .step-num.done { background: var(--green); border-color: var(--green); color: #fff; font-size: 16px; }
+  .step-num.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+  .step-body { flex: 1; }
+  .step-title-text { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+  .step-desc-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .step-badge {
+    font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; align-self: center;
+  }
+  .step-badge.done { background: var(--green-glow); color: var(--green); }
+  .step-badge.pending { background: rgba(79,142,247,0.12); color: var(--accent); }
+
+  /* INSTRUCTION BLOCK */
+  .instr-title {
+    font-family: var(--font-display); font-size: 22px; font-weight: 800;
+    margin-bottom: 8px; line-height: 1.3;
+  }
+  .instr-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+
+  .os-toggle {
+    display: flex; gap: 6px; margin-bottom: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 4px;
+  }
+  .os-btn {
+    flex: 1; padding: 9px; border-radius: 9px; border: none; cursor: pointer;
+    font-family: var(--font-body); font-size: 14px; font-weight: 500;
+    background: transparent; color: var(--muted); transition: all 0.2s;
+  }
+  .os-btn.active { background: var(--accent); color: #fff; }
+
+  .instr-steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .instr-step {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+  }
+  .instr-step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent-glow); border: 1px solid var(--accent);
+    color: var(--accent); font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .instr-step-text { font-size: 14px; line-height: 1.55; }
+  .instr-step-text strong { color: var(--text); font-weight: 600; }
+  .instr-step-text span { color: var(--muted); font-size: 12px; display: block; margin-top: 3px; }
+
+  .tip-box {
+    background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 12px; padding: 14px; margin-bottom: 20px;
+    font-size: 13px; color: var(--warn); line-height: 1.5;
+  }
+  .tip-box b { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* CONFIRM BUTTON */
+  .btn-confirm {
+    width: 100%; padding: 16px; border-radius: var(--radius);
+    background: var(--accent); color: #fff; border: none;
+    font-family: var(--font-body); font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+    box-shadow: 0 4px 24px rgba(79,142,247,0.3);
+  }
+  .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(79,142,247,0.4); }
+  .btn-confirm:active { transform: scale(0.98); }
+  .btn-confirm.green-btn {
+    background: var(--green);
+    box-shadow: 0 4px 24px rgba(49,196,141,0.3);
+  }
+  .btn-confirm.green-btn:hover { box-shadow: 0 6px 28px rgba(49,196,141,0.4); }
+  .btn-back {
+    width: 100%; padding: 13px; border-radius: var(--radius);
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    font-family: var(--font-body); font-size: 14px; cursor: pointer;
+  }
+  .btn-back:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  /* SUCCESS */
+  .success-wrap { text-align: center; padding: 32px 0; }
+  .success-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: var(--green-glow); border: 2px solid var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; margin: 0 auto 20px;
+    animation: pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;
+  }
+  @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .success-title { font-family: var(--font-display); font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+  .success-desc { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+  .summary-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; text-align: left; margin-bottom: 24px;
+  }
+  .summary-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-check { color: var(--green); font-size: 18px; }
+
+  /* HELP */
+  .help-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border-radius: var(--radius);
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: var(--font-body); font-size: 14px; cursor: pointer;
+    margin-top: 8px; text-decoration: none;
+  }
+  .help-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-mark">M</div>
+  <div>
+    <div class="header-text">Meritus Capital</div>
+    <div class="header-sub">Guia rápido de instalação</div>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-steps">
+    <div class="prog-step active" id="ps1"></div>
+    <div class="prog-step" id="ps2"></div>
+    <div class="prog-step" id="ps3"></div>
+  </div>
+  <div class="prog-label" id="prog-label">Etapa 1 de 3</div>
+</div>
+
+<div class="content">
+
+  <!-- TELA 1: BOAS VINDAS -->
+  <div class="screen active" id="s1">
+    <span class="welcome-emoji">👋</span>
+    <div class="welcome-title">Olá! Vamos configurar<br><span>seu acesso</span> agora.</div>
+    <div class="welcome-desc">São apenas 2 passos simples. Leva menos de 5 minutos e você faz tudo pelo celular.</div>
+
+    <div class="steps-preview">
+      <div class="preview-item">
+        <div class="preview-icon blue">📲</div>
+        <div>
+          <div class="preview-label">Instalar o Telegram</div>
+          <div class="preview-time">~2 minutos</div>
+        </div>
+      </div>
+      <div class="preview-item">
+        <div class="preview-icon green">🌍</div>
+        <div>
+          <div class="preview-label">Liberar ligações internacionais</div>
+          <div class="preview-time">~1 minuto</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-confirm" onclick="goTo(2)">Começar agora →</button>
+  </div>
+
+  <!-- TELA 2: INSTALAR TELEGRAM -->
+  <div class="screen" id="s2">
+    <div class="instr-title">📲 Instalar o Telegram</div>
+    <div class="instr-sub">Selecione o tipo do seu celular e siga os passos abaixo:</div>
+
+    <div class="os-toggle">
+      <button class="os-btn active" id="btn-android" onclick="setOS('android')">🤖 Android</button>
+      <button class="os-btn" id="btn-ios" onclick="setOS('ios')">🍎 iPhone</button>
+    </div>
+
+    <div class="instr-steps" id="steps-android">
+      <div class="instr-step">
+        <div class="instr-step-num">1</div>
+        <div class="instr-step-text"><strong>Abra a Play Store</strong> no seu celular<span>Ícone colorido com triângulo, geralmente na tela inicial</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">2</div>
+        <div class="instr-step-text"><strong>Pesquise "Telegram"</strong> na barra de busca<span>O app correto tem ícone azul com um avião de papel branco</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">3</div>
+        <div class="instr-step-text"><strong>Toque em "Instalar"</strong> e aguarde<span>Pode pedir confirmação de conta Google — aceite</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">4</div>
+        <div class="instr-step-text"><strong>Abra o Telegram</strong> e toque em "Começar"</div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">5</div>
+        <div class="instr-step-text"><strong>Digite seu número</strong> com DDD<span>O código do Brasil (+55) já vem preenchido</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">6</div>
+        <div class="instr-step-text"><strong>Confirme o SMS</strong> que vai chegar no seu celular<span>Um código de 5 dígitos — digite no Telegram</span></div>
+      </div>
+    </div>
+
+    <div class="instr-steps" id="steps-ios" style="display:none">
+      <div class="instr-step">
+        <div class="instr-step-num">1</div>
+        <div class="instr-step-text"><strong>Abra a App Store</strong> no seu iPhone<span>Ícone azul com letra "A", na tela inicial</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">2</div>
+        <div class="instr-step-text"><strong>Toque na lupa</strong> e pesquise "Telegram"</div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">3</div>
+        <div class="instr-step-text"><strong>Toque em "Obter"</strong> ao lado do app<span>Pode pedir Face ID ou senha do Apple ID para confirmar</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">4</div>
+        <div class="instr-step-text"><strong>Abra o Telegram</strong> e toque em "Começar"</div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">5</div>
+        <div class="instr-step-text"><strong>Digite seu número</strong> com DDD<span>O código do Brasil (+55) já vem preenchido</span></div>
+      </div>
+      <div class="instr-step">
+        <div class="instr-step-num">6</div>
+        <div class="instr-step-text"><strong>Confirme o SMS</strong> que vai chegar no seu celular<span>Um código de 5 dígitos — digite no Telegram</span></div>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <b>⚠️ Atenção</b>
+      Se o Telegram já estiver instalado no seu celular, pode pular para o próximo passo.
+    </div>
+
+    <button class="btn-confirm" onclick="goTo(3)">Telegram instalado ✓</button>
+    <button class="btn-back" onclick="goTo(1)">← Voltar</button>
+  </div>
+
+  <!-- TELA 3: LIGAÇÕES INTERNACIONAIS -->
+  <div class="screen" id="s3">
+    <div class="instr-title">🌍 Liberar ligações internacionais</div>
+    <div class="instr-sub">Escolha como prefere fazer o desbloqueio:</div>
+
+    <div class="os-toggle" style="margin-bottom:20px;">
+      <button class="os-btn active" id="btn-operadora" onclick="setMetodo('operadora')">📞 Via operadora</button>
+      <button class="os-btn" id="btn-config" onclick="setMetodo('config')">⚙️ Configurações</button>
+    </div>
+
+    <!-- MÉTODO 1: OPERADORA -->
+    <div id="bloco-operadora">
+      <div style="font-size:13px; color:var(--muted); margin-bottom:12px;">Selecione sua operadora:</div>
+      <div class="os-toggle" style="margin-bottom:20px; flex-wrap:wrap;">
+        <button class="os-btn active" id="btn-claro" onclick="setOp('claro')">Claro</button>
+        <button class="os-btn" id="btn-vivo" onclick="setOp('vivo')">Vivo</button>
+        <button class="os-btn" id="btn-tim" onclick="setOp('tim')">TIM</button>
+        <button class="os-btn" id="btn-oi" onclick="setOp('oi')">Oi</button>
+      </div>
+
+      <div class="instr-steps" id="steps-claro">
+        <div class="instr-step">
+          <div class="instr-step-num">1</div>
+          <div class="instr-step-text"><strong>Ligue para *1052</strong> do seu celular Claro<span>Atendimento disponível 24h</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">2</div>
+          <div class="instr-step-text"><strong>Solicite o desbloqueio de ligações internacionais</strong><span>Informe que deseja habilitar chamadas para o exterior</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">3</div>
+          <div class="instr-step-text"><strong>Aguarde a confirmação</strong> por SMS<span>O desbloqueio costuma ser imediato</span></div>
+        </div>
+      </div>
+
+      <div class="instr-steps" id="steps-vivo" style="display:none">
+        <div class="instr-step">
+          <div class="instr-step-num">1</div>
+          <div class="instr-step-text"><strong>Ligue para *8486</strong> do seu celular Vivo<span>Atendimento disponível 24h</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">2</div>
+          <div class="instr-step-text"><strong>Solicite o desbloqueio de ligações internacionais</strong><span>Informe que deseja habilitar chamadas para o exterior</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">3</div>
+          <div class="instr-step-text"><strong>Aguarde a confirmação</strong> por SMS<span>O desbloqueio costuma ser imediato</span></div>
+        </div>
+      </div>
+
+      <div class="instr-steps" id="steps-tim" style="display:none">
+        <div class="instr-step">
+          <div class="instr-step-num">1</div>
+          <div class="instr-step-text"><strong>Ligue para *144</strong> do seu celular TIM<span>Atendimento disponível 24h</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">2</div>
+          <div class="instr-step-text"><strong>Solicite o desbloqueio de ligações internacionais</strong><span>Informe que deseja habilitar chamadas para o exterior</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">3</div>
+          <div class="instr-step-text"><strong>Aguarde a confirmação</strong> por SMS<span>O desbloqueio costuma ser imediato</span></div>
+        </div>
+      </div>
+
+      <div class="instr-steps" id="steps-oi" style="display:none">
+        <div class="instr-step">
+          <div class="instr-step-num">1</div>
+          <div class="instr-step-text"><strong>Ligue para 1057</strong> do seu celular Oi<span>Atendimento disponível 24h</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">2</div>
+          <div class="instr-step-text"><strong>Solicite o desbloqueio de ligações internacionais</strong><span>Informe que deseja habilitar chamadas para o exterior</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">3</div>
+          <div class="instr-step-text"><strong>Aguarde a confirmação</strong> por SMS<span>O desbloqueio costuma ser imediato</span></div>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <b>⚠️ Atenção</b>
+        Após o desbloqueio pela operadora, você já consegue receber e fazer ligações internacionais normalmente pelo seu número.
+      </div>
+    </div>
+
+    <!-- MÉTODO 2: CONFIGURAÇÕES DO CELULAR -->
+    <div id="bloco-config" style="display:none">
+      <div style="font-size:13px; color:var(--muted); margin-bottom:12px;">Selecione o tipo do seu celular:</div>
+      <div class="os-toggle" style="margin-bottom:20px;">
+        <button class="os-btn active" id="btn-cfg-android" onclick="setCfgOS('android')">🤖 Android</button>
+        <button class="os-btn" id="btn-cfg-ios" onclick="setCfgOS('ios')">🍎 iPhone</button>
+      </div>
+
+      <div class="instr-steps" id="cfg-android">
+        <div class="instr-step">
+          <div class="instr-step-num">1</div>
+          <div class="instr-step-text"><strong>Abra as Configurações</strong> do seu celular<span>Ícone de engrenagem na tela inicial ou menu de apps</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">2</div>
+          <div class="instr-step-text"><strong>Toque em "Conexões"</strong> ou <strong>"Rede móvel"</strong><span>O nome pode variar conforme a marca do celular</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">3</div>
+          <div class="instr-step-text"><strong>Selecione "Itinerância de dados"</strong> ou <strong>"Roaming"</strong></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">4</div>
+          <div class="instr-step-text"><strong>Ative a opção de itinerância</strong> de chamadas ou dados internacionais<span>Em alguns celulares aparece como "Chamadas internacionais"</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">5</div>
+          <div class="instr-step-text"><strong>Confirme a ativação</strong> se aparecer uma janela de aviso<span>Pronto! Ligações internacionais habilitadas</span></div>
+        </div>
+      </div>
+
+      <div class="instr-steps" id="cfg-ios" style="display:none">
+        <div class="instr-step">
+          <div class="instr-step-num">1</div>
+          <div class="instr-step-text"><strong>Abra as Configurações</strong> do iPhone<span>Ícone cinza de engrenagem</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">2</div>
+          <div class="instr-step-text"><strong>Toque em "Celular"</strong> ou <strong>"Dados Celulares"</strong></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">3</div>
+          <div class="instr-step-text"><strong>Toque em "Opções de Dados Celulares"</strong></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">4</div>
+          <div class="instr-step-text"><strong>Ative o "Roaming de Voz"</strong><span>O botão deve ficar verde</span></div>
+        </div>
+        <div class="instr-step">
+          <div class="instr-step-num">5</div>
+          <div class="instr-step-text"><strong>Pronto!</strong> Ligações internacionais habilitadas no seu iPhone</div>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <b>💡 Dica</b>
+        Se a opção não aparecer, pode ser necessário contatar sua operadora para liberar o serviço no plano.
+      </div>
+    </div>
+
+    <button class="btn-confirm green-btn" onclick="goTo(4)">Desbloqueio concluído ✓</button>
+    <button class="btn-back" onclick="goTo(2)">← Voltar</button>
+  </div>
+
+  <!-- TELA 4: ENVIAR PRINT -->
+  <div class="screen" id="s4">
+    <div class="instr-title">📸 Envie a confirmação</div>
+    <div class="instr-sub">Quase lá! Para finalizar, precisamos que você envie um <strong>print da tela</strong> mostrando que as ligações internacionais estão desbloqueadas.</div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <h3><i class="ti ti-camera" aria-hidden="true" style="color:var(--text-accent)"></i> Como tirar o print</h3>
+      <div class="step"><div class="step-num" style="background:var(--bg-accent);color:var(--text-accent)">1</div><div class="step-text">Abra as configurações onde você fez o desbloqueio<div class="step-note">Configurações da operadora ou do celular</div></div></div>
+      <div class="step"><div class="step-num" style="background:var(--bg-accent);color:var(--text-accent)">2</div><div class="step-text">Tire um print da tela mostrando que o desbloqueio está <strong>ativo</strong><div class="step-note">A tela deve mostrar claramente a opção <strong>Desabilitada</strong></div></div></div>
+      <div class="step"><div class="step-num" style="background:var(--bg-accent);color:var(--text-accent)">3</div><div class="step-text">Envie o print pelo WhatsApp no botão abaixo</div></div>
+    </div>
+
+    <div class="tip-box">
+      <b>⚠️ Importante</b>
+      Sem o envio do print, não conseguimos confirmar o desbloqueio e liberar o seu acesso completo.
+    </div>
+
+    <a href="https://wa.me/556236025909?text=Ol%C3%A1%2C+segue+o+print+confirmando+o+desbloqueio+das+liga%C3%A7%C3%B5es+internacionais!" class="btn-confirm" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:10px" onclick="goTo(5)">
+      📲 Enviar print pelo WhatsApp
+    </a>
+    <button class="btn-back" onclick="goTo(3)">← Voltar</button>
+  </div>
+
+  <!-- TELA 5: SUCESSO -->
+  <div class="screen" id="s5">
+    <div class="success-wrap">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Tudo pronto!</div>
+      <div class="success-desc">Sua configuração está completa e o print foi enviado para nossa equipe. Em breve seu acesso será confirmado.</div>
+
+      <div class="summary-card">
+        <div class="summary-row"><span class="summary-check">✓</span> Telegram instalado e configurado</div>
+        <div class="summary-row"><span class="summary-check">✓</span> Ligações internacionais liberadas</div>
+        <div class="summary-row"><span class="summary-check">✓</span> Print enviado para confirmação</div>
+      </div>
+
+      <div class="instr-sub" style="margin-bottom:16px;">Ficou com alguma dúvida? Fale com nossa equipe:</div>
+      <a href="https://wa.me/556236025909" class="help-btn">💬 Chamar no WhatsApp</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let current = 1;
+
+  function goTo(n) {
+    document.getElementById('s' + current).classList.remove('active');
+    document.getElementById('s' + n).classList.add('active');
+    current = n;
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress() {
+    const steps = [null, document.getElementById('ps1'), document.getElementById('ps2'), document.getElementById('ps3'), document.getElementById('ps4')];
+    const labels = ['', 'Etapa 1 de 3', 'Etapa 2 de 3', 'Etapa 3 de 3', 'Etapa final', 'Concluído'];
+    for (let i = 1; i <= 4; i++) {
+      if (!steps[i]) continue;
+      steps[i].className = 'prog-step';
+      if (i < current) steps[i].classList.add('done');
+      else if (i === current) steps[i].classList.add('active');
+    }
+    document.getElementById('prog-label').textContent = labels[Math.min(current, 5)];
+  }
+
+  function setOS(os) {
+    document.getElementById('steps-android').style.display = os === 'android' ? 'flex' : 'none';
+    document.getElementById('steps-ios').style.display = os === 'ios' ? 'flex' : 'none';
+    document.getElementById('btn-android').className = 'os-btn' + (os === 'android' ? ' active' : '');
+    document.getElementById('btn-ios').className = 'os-btn' + (os === 'ios' ? ' active' : '');
+  }
+
+  function setOp(op) {
+    ['claro','vivo','tim','oi'].forEach(function(o) {
+      document.getElementById('steps-' + o).style.display = o === op ? 'flex' : 'none';
+      document.getElementById('btn-' + o).className = 'os-btn' + (o === op ? ' active' : '');
+    });
+  }
+
+  function setMetodo(m) {
+    document.getElementById('bloco-operadora').style.display = m === 'operadora' ? 'block' : 'none';
+    document.getElementById('bloco-config').style.display = m === 'config' ? 'block' : 'none';
+    document.getElementById('btn-operadora').className = 'os-btn' + (m === 'operadora' ? ' active' : '');
+    document.getElementById('btn-config').className = 'os-btn' + (m === 'config' ? ' active' : '');
+  }
+
+  function setCfgOS(os) {
+    document.getElementById('cfg-android').style.display = os === 'android' ? 'flex' : 'none';
+    document.getElementById('cfg-ios').style.display = os === 'ios' ? 'flex' : 'none';
+    document.getElementById('btn-cfg-android').className = 'os-btn' + (os === 'android' ? ' active' : '');
+    document.getElementById('btn-cfg-ios').className = 'os-btn' + (os === 'ios' ? ' active' : '');
+  }
+</script>
+</body>
+</html>
