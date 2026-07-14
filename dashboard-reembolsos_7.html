@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Reembolsos — Meritus Capital</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyCzYVnaDUFREHI9l2xsQjoXhLAlVujHNp0",
+  authDomain: "meritus-dashboard.firebaseapp.com",
+  projectId: "meritus-dashboard",
+  storageBucket: "meritus-dashboard.firebasestorage.app",
+  messagingSenderId: "226896434396",
+  appId: "1:226896434396:web:af413bff6d4d9882c15019"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window._db = db;
+window._col = collection;
+window._doc = doc;
+window._onSnapshot = onSnapshot;
+window._setDoc = setDoc;
+window._deleteDoc = deleteDoc;
+window._fbReady = true;
+window.dispatchEvent(new Event('fbReady'));
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#f0f2f8;min-height:100vh;padding-bottom:60px}
+.header{background:#181c27;border-bottom:1px solid rgba(255,255,255,.08);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;border-radius:10px;background:#e34948;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0}
+.header-text{font-size:15px;font-weight:600}
+.header-sub{font-size:12px;color:#7a82a0}
+.header-actions{display:flex;gap:8px}
+.btn-add{padding:9px 16px;border-radius:10px;border:1px solid #e34948;background:rgba(227,73,72,.15);color:#e34948;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-add:hover{background:rgba(227,73,72,.25)}
+.btn-sec{padding:9px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:none;color:#7a82a0;font-size:13px;cursor:pointer;font-family:inherit}
+.btn-sec:hover{color:#f0f2f8}
+.content{max-width:1000px;margin:0 auto;padding:24px 20px 0}
+.mes-selector{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.mes-selector label{font-size:13px;color:#7a82a0}
+.mes-selector input{border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#181c27;color:#f0f2f8;padding:7px 12px;font-size:13px;font-family:inherit}
+.mes-selector select{border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#181c27;color:#f0f2f8;padding:7px 12px;font-size:13px;font-family:inherit}
+
+/* MÉTRICAS GERAIS */
+.metrics-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1.5rem}
+.metric{background:#181c27;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px}
+.metric-val{font-size:26px;font-weight:700}
+.metric-lbl{font-size:12px;color:#7a82a0;margin-top:4px}
+
+/* PROVEDORES */
+.provedores{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:1.5rem}
+.provedor-card{background:#181c27;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px}
+.provedor-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.provedor-badge{padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700}
+.prov-cakto{background:rgba(79,142,247,.15);color:#4f8ef7;border:1px solid rgba(79,142,247,.3)}
+.prov-ticto{background:rgba(49,196,141,.15);color:#31c48d;border:1px solid rgba(49,196,141,.3)}
+.prov-kirvano{background:rgba(245,166,35,.15);color:#f5a623;border:1px solid rgba(245,166,35,.3)}
+.provedor-total{font-size:12px;color:#7a82a0;margin-left:auto}
+.tipo-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px}
+.tipo-row:last-child{border-bottom:none}
+.tipo-lbl{color:#7a82a0;display:flex;align-items:center;gap:6px}
+.tipo-dot{width:8px;height:8px;border-radius:50%}
+.tipo-val{font-weight:600}
+
+/* GRÁFICO */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+.card{background:#181c27;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px}
+.card-title{font-size:11px;font-weight:600;color:#7a82a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+
+/* TABELA */
+.table-wrap{background:#181c27;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+.table-filters{display:flex;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap;align-items:center}
+.table-filters select,.table-filters input[type=text]{border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#0f1117;color:#f0f2f8;padding:6px 10px;font-size:13px;font-family:inherit}
+.table-head{padding:10px 16px;font-size:11px;font-weight:600;color:#7a82a0;text-transform:uppercase;letter-spacing:.06em;display:grid;grid-template-columns:1.3fr 0.8fr 0.8fr 1fr 0.8fr 1fr 60px;gap:8px;border-bottom:1px solid rgba(255,255,255,.06)}
+.table-row{padding:11px 16px;font-size:13px;display:grid;grid-template-columns:1.3fr 0.8fr 0.8fr 1fr 0.8fr 1fr 60px;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,.06)}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:rgba(255,255,255,.03)}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;display:inline-block}
+.b-chargeback{background:rgba(227,73,72,.15);color:#e34948}
+.b-cap{background:rgba(245,166,35,.15);color:#f5a623}
+.b-corretora{background:rgba(139,92,246,.15);color:#a78bfa}
+.b-solicitacao{background:rgba(6,182,212,.15);color:#06b6d4}
+.row-actions{display:flex;gap:4px}
+.btn-icon{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#7a82a0;font-size:13px}
+.btn-icon.edit:hover{background:rgba(79,142,247,.15);color:#4f8ef7;border-color:#4f8ef7}
+.btn-icon.del:hover{background:rgba(227,73,72,.15);color:#e34948;border-color:#e34948}
+.empty{text-align:center;padding:2.5rem;color:#7a82a0;font-size:14px}
+.desc-preview{font-size:11px;color:#7a82a0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#1e2333;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:24px;width:100%;max-width:460px;margin:0 16px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px}
+.field{margin-bottom:12px}
+.field label{font-size:12px;color:#7a82a0;display:block;margin-bottom:5px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#181c27;color:#f0f2f8;padding:9px 12px;font-size:14px;font-family:inherit}
+.field textarea{min-height:90px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#e34948}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.btn-save{flex:1;padding:11px;border-radius:10px;border:none;background:#e34948;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-save:hover{background:#c73130}
+.btn-danger{flex:1;padding:11px;border-radius:10px;border:none;background:#e34948;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-cancel{padding:11px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:none;color:#7a82a0;font-size:14px;cursor:pointer;font-family:inherit}
+.tag-edit{font-size:10px;padding:2px 6px;border-radius:20px;background:rgba(79,142,247,.2);color:#4f8ef7;margin-left:4px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#7a82a0}
+.leg-dot{width:9px;height:9px;border-radius:2px}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#1e2333;font-size:13px;font-weight:600;border-top:1px solid rgba(255,255,255,.08)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0f1117">
+  <div style="background:#181c27;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:36px 32px;width:100%;max-width:380px">
+    <div style="width:48px;height:48px;border-radius:12px;background:#e34948;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;margin:0 auto 16px">R$</div>
+    <div style="font-size:20px;font-weight:700;text-align:center;margin-bottom:4px">Dashboard de Reembolsos</div>
+    <div style="font-size:13px;color:#7a82a0;text-align:center;margin-bottom:24px">Meritus Capital</div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:#7a82a0;display:block;margin-bottom:5px">Usuário</label>
+      <input type="text" id="l-user" placeholder="Seu usuário" style="width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0f1117;color:#f0f2f8;padding:10px 14px;font-size:14px;font-family:inherit"/>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;color:#7a82a0;display:block;margin-bottom:5px">Senha</label>
+      <input type="password" id="l-pass" placeholder="Sua senha" style="width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0f1117;color:#f0f2f8;padding:10px 14px;font-size:14px;font-family:inherit"/>
+    </div>
+    <button onclick="fazerLogin()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#e34948;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Entrar</button>
+    <div id="login-error" style="font-size:13px;color:#e34948;text-align:center;margin-top:10px;min-height:18px"></div>
+  </div>
+</div>
+
+<div id="dashboard-screen" style="display:none">
+<div class="header">
+  <div class="header-left">
+    <div class="logo">R$</div>
+    <div>
+      <div class="header-text">Dashboard de Reembolsos</div>
+      <div class="header-sub">Meritus Capital &nbsp;·&nbsp; <span style="display:inline-flex;align-items:center;gap:4px"><span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#f5a623;display:inline-block"></span><span id="sync-lbl" style="font-size:11px">Conectando...</span></span></div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-add" onclick="abrirModal(null)">＋ Novo reembolso</button>
+    <button class="btn-sec" onclick="exportarDados()">⬇ Exportar</button>
+    <label class="btn-sec">⬆ Importar<input type="file" accept=".json" onchange="importarDados(event)" style="display:none"/></label>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:8px">
+      <div style="width:28px;height:28px;border-radius:50%;background:rgba(227,73,72,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#e34948" id="user-av"></div>
+      <span style="font-size:13px;color:#7a82a0" id="user-label"></span>
+      <button onclick="fazerLogout()" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:none;color:#7a82a0;font-size:12px;cursor:pointer;font-family:inherit">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- FILTRO DE MÊS -->
+  <div class="mes-selector">
+    <label>Mês de referência:</label>
+    <input type="month" id="filtro-mes" onchange="render()"/>
+    <button class="btn-sec" onclick="limparMes()">Ver todos</button>
+    <span id="mes-label" style="font-size:13px;color:#7a82a0"></span>
+  </div>
+
+  <!-- MÉTRICAS GERAIS -->
+  <div class="metrics-top">
+    <div class="metric"><div class="metric-val" id="m-total">0</div><div class="metric-lbl">Total de solicitações</div></div>
+    <div class="metric"><div class="metric-val" id="m-valor" style="color:#e34948">R$ 0,00</div><div class="metric-lbl">Valor total reembolsado</div></div>
+    <div class="metric"><div class="metric-val" id="m-chargeback" style="color:#e34948">0</div><div class="metric-lbl">Chargebacks</div></div>
+    <div class="metric"><div class="metric-val" id="m-cap" style="color:#f5a623">0</div><div class="metric-lbl">Reembolso CAP</div></div>
+    <div class="metric"><div class="metric-val" id="m-corretora" style="color:#a78bfa">0</div><div class="metric-lbl">Reembolso Corretora</div></div>
+    <div class="metric"><div class="metric-val" id="m-solicitacao" style="color:#06b6d4">0</div><div class="metric-lbl">Solicitação de Reembolso</div></div>
+  </div>
+
+  <!-- MÉTRICAS POR TIME -->
+  <div class="metrics-top" style="margin-bottom:1.5rem">
+    <div class="metric"><div style="font-size:11px;font-weight:600;color:#7a82a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Time 5</div><div class="metric-val" id="t5-total" style="color:#4f8ef7">0</div><div class="metric-lbl">solicitações · <span id="t5-valor" style="color:#e34948">R$ 0,00</span></div></div>
+    <div class="metric"><div style="font-size:11px;font-weight:600;color:#7a82a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Time 6</div><div class="metric-val" id="t6-total" style="color:#31c48d">0</div><div class="metric-lbl">solicitações · <span id="t6-valor" style="color:#e34948">R$ 0,00</span></div></div>
+    <div class="metric"><div style="font-size:11px;font-weight:600;color:#7a82a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Time 7</div><div class="metric-val" id="t7-total" style="color:#f5a623">0</div><div class="metric-lbl">solicitações · <span id="t7-valor" style="color:#e34948">R$ 0,00</span></div></div>
+    <div class="metric"><div style="font-size:11px;font-weight:600;color:#7a82a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Time 8</div><div class="metric-val" id="t8-total" style="color:#a78bfa">0</div><div class="metric-lbl">solicitações · <span id="t8-valor" style="color:#e34948">R$ 0,00</span></div></div>
+  </div>
+
+  <!-- CARDS POR PROVEDOR -->
+  <div class="provedores">
+    <div class="provedor-card">
+      <div class="provedor-header">
+        <span class="provedor-badge prov-cakto">Cakto</span>
+        <span class="provedor-total" id="cakto-total">0 solicitações</span>
+      </div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#e34948"></span>Chargeback</span><span class="tipo-val" id="cakto-chargeback">R$ 0,00</span></div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#f5a623"></span>Reembolso CAP</span><span class="tipo-val" id="cakto-cap">R$ 0,00</span></div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#a78bfa"></span>Reembolso Corretora</span><span class="tipo-val" id="cakto-corretora">R$ 0,00</span></div>
+      <div class="tipo-row" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px;padding-top:10px"><span class="tipo-lbl" style="color:#f0f2f8;font-weight:500">Total</span><span class="tipo-val" id="cakto-valor" style="color:#4f8ef7">R$ 0,00</span></div>
+    </div>
+    <div class="provedor-card">
+      <div class="provedor-header">
+        <span class="provedor-badge prov-ticto">Ticto</span>
+        <span class="provedor-total" id="ticto-total">0 solicitações</span>
+      </div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#e34948"></span>Chargeback</span><span class="tipo-val" id="ticto-chargeback">R$ 0,00</span></div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#f5a623"></span>Reembolso CAP</span><span class="tipo-val" id="ticto-cap">R$ 0,00</span></div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#a78bfa"></span>Reembolso Corretora</span><span class="tipo-val" id="ticto-corretora">R$ 0,00</span></div>
+      <div class="tipo-row" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px;padding-top:10px"><span class="tipo-lbl" style="color:#f0f2f8;font-weight:500">Total</span><span class="tipo-val" id="ticto-valor" style="color:#31c48d">R$ 0,00</span></div>
+    </div>
+    <div class="provedor-card">
+      <div class="provedor-header">
+        <span class="provedor-badge prov-kirvano">Kirvano</span>
+        <span class="provedor-total" id="kirvano-total">0 solicitações</span>
+      </div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#e34948"></span>Chargeback</span><span class="tipo-val" id="kirvano-chargeback">R$ 0,00</span></div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#f5a623"></span>Reembolso CAP</span><span class="tipo-val" id="kirvano-cap">R$ 0,00</span></div>
+      <div class="tipo-row"><span class="tipo-lbl"><span class="tipo-dot" style="background:#a78bfa"></span>Reembolso Corretora</span><span class="tipo-val" id="kirvano-corretora">R$ 0,00</span></div>
+      <div class="tipo-row" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px;padding-top:10px"><span class="tipo-lbl" style="color:#f0f2f8;font-weight:500">Total</span><span class="tipo-val" id="kirvano-valor" style="color:#f5a623">R$ 0,00</span></div>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS -->
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Por provedor</div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#4f8ef7"></span>Cakto</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#31c48d"></span>Ticto</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#f5a623"></span>Kirvano</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="chart-prov"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Por tipo</div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#e34948"></span>Chargeback</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#f5a623"></span>Reembolso CAP</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#a78bfa"></span>Corretora</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="chart-tipo"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-wrap">
+    <div class="table-filters">
+      <select id="f-prov" onchange="renderTabela()">
+        <option value="">Todos os provedores</option>
+        <option value="Cakto">Cakto</option>
+        <option value="Ticto">Ticto</option>
+        <option value="Kirvano">Kirvano</option>
+      </select>
+      <select id="f-time-filtro" onchange="renderTabela()">
+        <option value="">Todos os times</option>
+        <option value="Time 5">Time 5</option>
+        <option value="Time 6">Time 6</option>
+        <option value="Time 7">Time 7</option>
+        <option value="Time 8">Time 8</option>
+      </select>
+      <select id="f-tipo" onchange="renderTabela()">
+        <option value="">Todos os tipos</option>
+        <option value="Chargeback">Chargeback</option>
+        <option value="Reembolso CAP">Reembolso CAP</option>
+        <option value="Reembolso Corretora">Reembolso Corretora</option>
+        <option value="Solicitação de Reembolso">Solicitação de Reembolso</option>
+      </select>
+      <input type="text" id="f-busca" placeholder="Buscar por nome ou ID..." oninput="renderTabela()" style="flex:1;min-width:160px"/>
+      <button onclick="limparFiltros()" class="btn-sec">✕ Limpar</button>
+      <span id="tabela-count" style="font-size:12px;color:#7a82a0;white-space:nowrap"></span>
+    </div>
+    <div id="tabela-wrap"><div class="empty">Nenhum reembolso registrado ainda.<br>Use o botão acima para adicionar.</div></div>
+    <div class="total-row"><span>Total filtrado:</span><span id="total-filtrado" style="color:#e34948">R$ 0,00</span></div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRO/EDIÇÃO -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Novo reembolso</div>
+    <div class="field"><label>Nome do cliente</label><input type="text" id="f-nome" placeholder="Ex: João Silva"/></div>
+    <div class="field"><label>Time</label>
+      <select id="f-time">
+        <option value="Time 5">Time 5</option>
+        <option value="Time 6">Time 6</option>
+        <option value="Time 7">Time 7</option>
+        <option value="Time 8">Time 8</option>
+      </select>
+    </div>
+    <div class="field"><label>ID do cliente</label><input type="text" id="f-id" placeholder="Ex: 123456"/></div>
+    <div class="field"><label>Provedor</label>
+      <select id="f-prov-modal">
+        <option value="Cakto">Cakto</option>
+        <option value="Ticto">Ticto</option>
+        <option value="Kirvano">Kirvano</option>
+      </select>
+    </div>
+    <div class="field"><label>Tipo</label>
+      <select id="f-tipo-modal">
+        <option value="Chargeback">Chargeback</option>
+        <option value="Reembolso CAP">Reembolso CAP</option>
+        <option value="Reembolso Corretora">Reembolso Corretora</option>
+        <option value="Solicitação de Reembolso">Solicitação de Reembolso</option>
+      </select>
+    </div>
+    <div class="field"><label>Valor (R$)</label><input type="number" id="f-valor" placeholder="0,00" min="0" step="0.01"/></div>
+    <div class="field"><label>Data de pagamento</label><input type="date" id="f-data-pagamento"/></div>
+    <div class="field"><label>Data de reembolso</label><input type="date" id="f-data-reembolso"/></div>
+    <div class="field"><label>Descrição / Motivo</label><textarea id="f-desc" placeholder="Descreva o motivo do reembolso..."></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" id="btn-salvar" onclick="salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXCLUSÃO -->
+<div class="modal-overlay" id="modal-del">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-title">Remover reembolso?</div>
+    <div style="font-size:14px;color:#7a82a0;line-height:1.6">Esse registro será excluído permanentemente.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharDel()">Cancelar</button>
+      <button class="btn-danger" onclick="confirmarDel()">Remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<div class="modal-overlay" id="modal-det">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-title">Detalhes do reembolso</div>
+    <div id="det-content"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="fecharDet()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var dados = [];
+var chartProv, chartTipo;
+var editandoId = null, deletandoId = null;
+var filtroMes = '';
+
+// ── AUTH ─────────────────────────────────────────────────────────────────
+var USUARIOS = [
+  {user:'adm', pass:'adm', nome:'ADM'},
+  {user:'supuni2', pass:'supuni2', nome:'Supuni 2'},
+  {user:'supuni3', pass:'supuni3', nome:'Supuni 3'}
+];
+var usuarioAtual = null;
+
+function fazerLogin(){
+  var u = document.getElementById('l-user').value.trim();
+  var p = document.getElementById('l-pass').value;
+  var found = USUARIOS.find(function(x){ return x.user===u && x.pass===p; });
+  if(found){
+    usuarioAtual = found;
+    sessionStorage.setItem('reimb-session', JSON.stringify(found));
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+    document.getElementById('user-label').textContent = found.nome;
+    document.getElementById('user-av').textContent = found.nome.charAt(0).toUpperCase();
+    iniciarListeners();
+  } else {
+    document.getElementById('login-error').textContent = 'Usuário ou senha incorretos.';
+  }
+}
+
+function fazerLogout(){
+  sessionStorage.removeItem('reimb-session');
+  usuarioAtual = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('dashboard-screen').style.display = 'none';
+  document.getElementById('l-user').value = '';
+  document.getElementById('l-pass').value = '';
+  if(window._unsubscribe) window._unsubscribe();
+}
+
+document.getElementById('l-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+document.getElementById('l-user').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('l-pass').focus(); });
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────
+function aguardarFB(fn){ if(window._fbReady) fn(); else window.addEventListener('fbReady', fn, {once:true}); }
+
+function iniciarListeners(){
+  aguardarFB(function(){
+    var unsub = window._onSnapshot(window._col(window._db,'reembolsos'), function(snap){
+      dados = [];
+      snap.forEach(function(d){ dados.push(Object.assign({id:d.id}, d.data())); });
+      dados.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+      render();
+      setSyncStatus('ok');
+    }, function(){ setSyncStatus('err'); });
+    window._unsubscribe = unsub;
+  });
+}
+
+function setSyncStatus(s){
+  var dot = document.getElementById('sync-dot');
+  var lbl = document.getElementById('sync-lbl');
+  if(!dot) return;
+  if(s==='ok'){ dot.style.background='#31c48d'; lbl.textContent='Sincronizado'; }
+  else { dot.style.background='#e34948'; lbl.textContent='Erro de conexão'; }
+}
+
+async function salvarFirestore(item){
+  await window._setDoc(window._doc(window._db,'reembolsos',item.id.toString()), item);
+}
+async function deletarFirestore(id){
+  await window._deleteDoc(window._doc(window._db,'reembolsos',id.toString()));
+}
+
+// ── STORAGE (legacy - não usado com Firebase) ──────────────────────────────
+function carregar(){ dados = []; }
+function salvarLocal(){}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function fmt(v){ return 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function hoje(){ return new Date().toISOString().split('T')[0]; }
+function mesAtual(){ return new Date().toISOString().slice(0,7); }
+function nomeMes(m){ if(!m) return ''; var p=m.split('-'); var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; return meses[parseInt(p[1])-1]+' de '+p[0]; }
+function filtrarDados(){ return filtroMes?dados.filter(function(d){return d.data&&d.data.startsWith(filtroMes);}):dados; }
+
+// ── MODAL ─────────────────────────────────────────────────────────────────
+function abrirModal(id){
+  editandoId=id;
+  if(id!==null){
+    var d=dados.find(function(x){return x.id===id;});
+    document.getElementById('modal-title').textContent='Editar reembolso';
+    document.getElementById('btn-salvar').textContent='Salvar alterações';
+    document.getElementById('f-nome').value=d.nome||'';
+    document.getElementById('f-time').value=d.time||'Time 5';
+    document.getElementById('f-id').value=d.clienteId||'';
+    document.getElementById('f-prov-modal').value=d.provedor;
+    document.getElementById('f-tipo-modal').value=d.tipo;
+    document.getElementById('f-valor').value=d.valor||0;
+    document.getElementById('f-data-pagamento').value=d.dataPagamento||'';
+    document.getElementById('f-data-reembolso').value=d.dataReembolso||'';
+    document.getElementById('f-desc').value=d.descricao||'';
+  } else {
+    document.getElementById('modal-title').textContent='Novo reembolso';
+    document.getElementById('btn-salvar').textContent='Salvar';
+    document.getElementById('f-nome').value='';
+    document.getElementById('f-time').value='Time 5';
+    document.getElementById('f-id').value='';
+    document.getElementById('f-prov-modal').value='Cakto';
+    document.getElementById('f-tipo-modal').value='Chargeback';
+    document.getElementById('f-valor').value='';
+    document.getElementById('f-data-pagamento').value='';
+    document.getElementById('f-data-reembolso').value='';
+    document.getElementById('f-desc').value='';
+  }
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('f-nome').focus();
+}
+function fecharModal(){ document.getElementById('modal').classList.remove('open'); editandoId=null; }
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)fecharModal();});
+
+function salvar(){
+  var nome=document.getElementById('f-nome').value.trim();
+  var time=document.getElementById('f-time').value;
+  var clienteId=document.getElementById('f-id').value.trim();
+  var provedor=document.getElementById('f-prov-modal').value;
+  var tipo=document.getElementById('f-tipo-modal').value;
+  var valor=parseFloat(document.getElementById('f-valor').value)||0;
+  var data=hoje();
+  var dataPagamento=document.getElementById('f-data-pagamento').value||'';
+  var dataReembolso=document.getElementById('f-data-reembolso').value||'';
+  var descricao=document.getElementById('f-desc').value.trim();
+  if(!nome){alert('Informe o nome do cliente.');return;}
+  if(!valor){alert('Informe o valor do reembolso.');return;}
+  var reg = usuarioAtual ? usuarioAtual.user : '—';
+  if(editandoId!==null){
+    var item = Object.assign({}, dados.find(function(x){return x.id===editandoId;}), {nome,time,clienteId,provedor,tipo,valor,data,dataPagamento,dataReembolso,descricao,editado:true,editadoPor:reg});
+    salvarFirestore(item);
+  } else {
+    var item = {id:Date.now(),nome,time,clienteId,provedor,tipo,valor,data,dataPagamento,dataReembolso,descricao,editado:false,registradoPor:reg,ts:Date.now(),criadoEm:new Date().toLocaleString('pt-BR')};
+    salvarFirestore(item);
+  }
+  fecharModal();
+}
+
+function abrirDet(id){
+  var d=dados.find(function(x){return x.id===id;});
+  var tipoBadge={'Chargeback':'b-chargeback','Reembolso CAP':'b-cap','Reembolso Corretora':'b-corretora','Solicitação de Reembolso':'b-solicitacao'};
+  document.getElementById('det-content').innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:10px;font-size:14px">'+
+    '<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">Cliente</span><span style="font-weight:500">'+d.nome+'</span></div>'+
+    (d.time?'<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">Time</span><span style="font-weight:500">'+d.time+'</span></div>':'')+
+    (d.clienteId?'<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">ID</span><span style="font-weight:500">'+d.clienteId+'</span></div>':'')+
+    '<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">Provedor</span><span style="font-weight:500">'+d.provedor+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#7a82a0">Tipo</span><span class="badge '+tipoBadge[d.tipo]+'">'+d.tipo+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">Valor</span><span style="font-weight:700;color:#e34948">'+fmt(d.valor)+'</span></div>'+
+    (d.dataPagamento?'<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">Data de pagamento</span><span>'+formatarData(d.dataPagamento)+'</span></div>':'')+
+    (d.dataReembolso?'<div style="display:flex;justify-content:space-between"><span style="color:#7a82a0">Data de reembolso</span><span style="color:#31c48d;font-weight:500">'+formatarData(d.dataReembolso)+'</span></div>':'')+
+    (d.descricao?'<div style="border-top:1px solid rgba(255,255,255,.08);padding-top:10px"><div style="color:#7a82a0;font-size:12px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Motivo / Descrição</div><div style="line-height:1.6;color:#f0f2f8">'+d.descricao+'</div></div>':'')+
+    '</div>';
+  document.getElementById('modal-det').classList.add('open');
+}
+function fecharDet(){ document.getElementById('modal-det').classList.remove('open'); }
+document.getElementById('modal-det').addEventListener('click',function(e){if(e.target===this)fecharDet();});
+
+function abrirDel(id){ deletandoId=id; document.getElementById('modal-del').classList.add('open'); }
+function fecharDel(){ document.getElementById('modal-del').classList.remove('open'); deletandoId=null; }
+document.getElementById('modal-del').addEventListener('click',function(e){if(e.target===this)fecharDel();});
+function confirmarDel(){ dados=dados.filter(function(x){return x.id!==deletandoId;}); salvarLocal(); fecharDel(); render(); }
+
+// ── FILTROS ───────────────────────────────────────────────────────────────
+function limparMes(){ document.getElementById('filtro-mes').value=''; filtroMes=''; render(); }
+function limparFiltros(){ document.getElementById('f-prov').value=''; document.getElementById('f-tipo').value=''; document.getElementById('f-time-filtro').value=''; document.getElementById('f-busca').value=''; renderTabela(); }
+
+document.getElementById('filtro-mes').addEventListener('change',function(){ filtroMes=this.value; render(); });
+
+// ── EXPORT/IMPORT ─────────────────────────────────────────────────────────
+function exportarDados(){
+  if(!dados.length){alert('Nenhum dado para exportar.');return;}
+  var blob=new Blob([JSON.stringify({exportado:new Date().toISOString(),dados},null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='reembolsos-'+hoje()+'.json'; a.click(); URL.revokeObjectURL(url);
+}
+
+function importarDados(event){
+  var file=event.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var json=JSON.parse(e.target.result);
+      var novos=json.dados||json;
+      if(!Array.isArray(novos)) throw new Error();
+      var ids=new Set(dados.map(function(d){return d.id;}));
+      var add=0;
+      novos.forEach(function(d){if(!ids.has(d.id)){dados.push(d);add++;}});
+      salvarLocal(); render();
+      alert(add+' registro(s) importado(s)!');
+    }catch(e){ alert('Arquivo inválido.'); }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function formatarData(iso){ if(!iso) return '—'; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+function somaProv(lista, prov, tipo){ return lista.filter(function(d){return d.provedor===prov&&(!tipo||d.tipo===tipo);}).reduce(function(s,d){return s+parseFloat(d.valor||0);},0); }
+function countProv(lista, prov){ return lista.filter(function(d){return d.provedor===prov;}).length; }
+
+function render(){
+  var lista = filtrarDados();
+  var mesLabel = filtroMes ? nomeMes(filtroMes) : 'Todos os meses';
+  document.getElementById('mes-label').textContent = filtroMes ? '📅 '+mesLabel : '';
+
+  var total = lista.length;
+  var valorTotal = lista.reduce(function(s,d){return s+parseFloat(d.valor||0);},0);
+  var cCharge = lista.filter(function(d){return d.tipo==='Chargeback';}).length;
+  var cCap = lista.filter(function(d){return d.tipo==='Reembolso CAP';}).length;
+  var cCorr = lista.filter(function(d){return d.tipo==='Reembolso Corretora';}).length;
+
+  document.getElementById('m-total').textContent = total;
+  document.getElementById('m-valor').textContent = fmt(valorTotal);
+  var cSolic = lista.filter(function(d){return d.tipo==='Solicitação de Reembolso';}).length;
+  document.getElementById('m-chargeback').textContent = cCharge;
+  document.getElementById('m-cap').textContent = cCap;
+  document.getElementById('m-corretora').textContent = cCorr;
+  document.getElementById('m-solicitacao').textContent = cSolic;
+
+  // Cards por provedor
+  ['cakto','ticto','kirvano'].forEach(function(p){
+    var name = p.charAt(0).toUpperCase()+p.slice(1);
+    var ct = countProv(lista,name);
+    document.getElementById(p+'-total').textContent = ct+' solicitaç'+(ct===1?'ão':'ões');
+    document.getElementById(p+'-chargeback').textContent = fmt(somaProv(lista,name,'Chargeback'));
+    document.getElementById(p+'-cap').textContent = fmt(somaProv(lista,name,'Reembolso CAP'));
+    document.getElementById(p+'-corretora').textContent = fmt(somaProv(lista,name,'Reembolso Corretora'));
+    document.getElementById(p+'-valor').textContent = fmt(somaProv(lista,name));
+  });
+
+  // Gráfico por provedor
+  if(chartProv) chartProv.destroy();
+  chartProv = new Chart(document.getElementById('chart-prov'),{
+    type:'doughnut',
+    data:{labels:['Cakto','Ticto','Kirvano'],datasets:[{data:[somaProv(lista,'Cakto'),somaProv(lista,'Ticto'),somaProv(lista,'Kirvano')],backgroundColor:['#4f8ef7','#31c48d','#f5a623'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.label+': '+fmt(c.raw);}}}}}
+  });
+
+  // Gráfico por tipo
+  if(chartTipo) chartTipo.destroy();
+  chartTipo = new Chart(document.getElementById('chart-tipo'),{
+    type:'doughnut',
+    data:{labels:['Chargeback','Reembolso CAP','Reembolso Corretora'],datasets:[{data:[
+      lista.filter(function(d){return d.tipo==='Chargeback';}).reduce(function(s,d){return s+parseFloat(d.valor||0);},0),
+      lista.filter(function(d){return d.tipo==='Reembolso CAP';}).reduce(function(s,d){return s+parseFloat(d.valor||0);},0),
+      lista.filter(function(d){return d.tipo==='Reembolso Corretora';}).reduce(function(s,d){return s+parseFloat(d.valor||0);},0)
+    ],backgroundColor:['#e34948','#f5a623','#a78bfa'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.label+': '+fmt(c.raw);}}}}}
+  });
+
+  // Times
+  ['5','6','7','8'].forEach(function(n){
+    var tl=lista.filter(function(d){return d.time==='Time '+n;});
+    document.getElementById('t'+n+'-total').textContent=tl.length;
+    document.getElementById('t'+n+'-valor').textContent=fmt(tl.reduce(function(s,d){return s+parseFloat(d.valor||0);},0));
+  });
+
+  renderTabela();
+}
+
+function renderTabela(){
+  var fProv = document.getElementById('f-prov').value;
+  var fTipo = document.getElementById('f-tipo').value;
+  var fTime = document.getElementById('f-time-filtro').value;
+  var fBusca = document.getElementById('f-busca').value.toLowerCase();
+  var base = filtrarDados();
+  var lista = base.filter(function(d){
+    if(fProv && d.provedor!==fProv) return false;
+    if(fTipo && d.tipo!==fTipo) return false;
+    if(fTime && d.time!==fTime) return false;
+    if(fBusca && !d.nome.toLowerCase().includes(fBusca) && !(d.clienteId||'').toLowerCase().includes(fBusca)) return false;
+    return true;
+  });
+
+  var totalFilt = lista.reduce(function(s,d){return s+parseFloat(d.valor||0);},0);
+  document.getElementById('tabela-count').textContent = lista.length+' registro'+(lista.length!==1?'s':'');
+  document.getElementById('total-filtrado').textContent = fmt(totalFilt);
+
+  var wrap = document.getElementById('tabela-wrap');
+  if(!lista.length){ wrap.innerHTML='<div class="empty">Nenhum registro encontrado.</div>'; return; }
+
+  var tipoBadge={'Chargeback':'b-chargeback','Reembolso CAP':'b-cap','Reembolso Corretora':'b-corretora','Solicitação de Reembolso':'b-solicitacao'};
+  var provColor={'Cakto':'#4f8ef7','Ticto':'#31c48d','Kirvano':'#f5a623'};
+
+  wrap.innerHTML='<div class="table-head"><span>Cliente</span><span>Time</span><span>Provedor</span><span>Tipo</span><span>Valor</span><span>Data</span><span></span></div>'+
+    [...lista].reverse().map(function(d){
+      return '<div class="table-row">'+
+        '<div><div style="font-weight:500">'+d.nome+'</div>'+(d.clienteId?'<div style="font-size:11px;color:#7a82a0">ID: '+d.clienteId+'</div>':'')+'</div>'+
+        '<span style="font-size:12px;font-weight:500;color:#7a82a0">'+(d.time||'—')+'</span>'+
+        '<span style="font-weight:600;color:'+provColor[d.provedor]+'">'+d.provedor+'</span>'+
+        '<span><span class="badge '+tipoBadge[d.tipo]+'">'+d.tipo+'</span></span>'+
+        '<span style="font-weight:700;color:#e34948">'+fmt(d.valor)+'</span>'+
+        '<div style="font-size:12px;color:#7a82a0">'+formatarData(d.data)+(d.editado?' <span class="tag-edit">editado</span>':'')+(d.descricao?'<div class="desc-preview">'+d.descricao+'</div>':'')+'</div>'+
+        '<span class="row-actions">'+
+          '<button class="btn-icon" onclick="abrirDet('+d.id+')" title="Ver detalhes" style="font-size:15px">👁</button>'+
+          '<button class="btn-icon edit" onclick="abrirModal('+d.id+')" title="Editar">✏️</button>'+
+          '<button class="btn-icon del" onclick="abrirDel('+d.id+')" title="Remover">🗑️</button>'+
+        '</span>'+
+      '</div>';
+    }).join('');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.getElementById('filtro-mes').value = mesAtual();
+filtroMes = mesAtual();
+
+(function(){
+  var s = sessionStorage.getItem('reimb-session');
+  if(s){
+    try{
+      usuarioAtual = JSON.parse(s);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard-screen').style.display = 'block';
+      document.getElementById('user-label').textContent = usuarioAtual.nome;
+      document.getElementById('user-av').textContent = usuarioAtual.nome.charAt(0).toUpperCase();
+      iniciarListeners();
+    }catch(e){ sessionStorage.removeItem('reimb-session'); }
+  }
+})();
+</script>
+</div>
+</body>
+</html>
